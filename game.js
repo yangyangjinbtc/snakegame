@@ -221,25 +221,175 @@ class SnakeGame {
     
     drawSnake() {
         this.snake.forEach((segment, index) => {
+            const x = segment.x * this.gridSize;
+            const y = segment.y * this.gridSize;
+            
             if (index === 0) {
-                this.ctx.fillStyle = '#27ae60';
-                this.ctx.shadowColor = '#2ecc71';
-                this.ctx.shadowBlur = 10;
+                // 蛇头
+                this.drawSnakeHead(x, y);
             } else {
-                this.ctx.fillStyle = '#2ecc71';
-                this.ctx.shadowColor = '#27ae60';
-                this.ctx.shadowBlur = 5;
+                // 蛇身
+                this.drawSnakeBody(x, y, index);
             }
             
-            this.ctx.fillRect(
-                segment.x * this.gridSize + 2,
-                segment.y * this.gridSize + 2,
-                this.gridSize - 4,
-                this.gridSize - 4
-            );
-            
-            this.ctx.shadowBlur = 0;
+            // 绘制身体连接处
+            if (index > 0 && index < this.snake.length - 1) {
+                this.drawSnakeConnection(index);
+            }
         });
+    }
+    
+    drawSnakeConnection(index) {
+        const prev = this.snake[index - 1];
+        const curr = this.snake[index];
+        const next = this.snake[index + 1];
+        
+        const centerX = curr.x * this.gridSize + this.gridSize / 2;
+        const centerY = curr.y * this.gridSize + this.gridSize / 2;
+        
+        this.ctx.save();
+        this.ctx.fillStyle = '#27ae60';
+        this.ctx.shadowColor = '#2ecc71';
+        this.ctx.shadowBlur = 3;
+        
+        // 绘制平滑的连接曲线
+        this.ctx.beginPath();
+        this.ctx.arc(centerX, centerY, this.gridSize/2 - 4, 0, 2 * Math.PI);
+        this.ctx.fill();
+        
+        this.ctx.restore();
+    }
+    
+    drawSnakeHead(x, y) {
+        const centerX = x + this.gridSize / 2;
+        const centerY = y + this.gridSize / 2;
+        
+        // 根据移动方向调整蛇头角度
+        let rotation = 0;
+        if (this.dx === 1) rotation = 0; // 向右
+        else if (this.dx === -1) rotation = Math.PI; // 向左
+        else if (this.dy === -1) rotation = -Math.PI/2; // 向上
+        else if (this.dy === 1) rotation = Math.PI/2; // 向下
+        
+        this.ctx.save();
+        this.ctx.translate(centerX, centerY);
+        this.ctx.rotate(rotation);
+        
+        // 蛇头主体 - 更真实的形状
+        this.ctx.fillStyle = '#27ae60';
+        this.ctx.shadowColor = '#2ecc71';
+        this.ctx.shadowBlur = 8;
+        
+        // 绘制椭圆形的蛇头
+        this.ctx.beginPath();
+        this.ctx.ellipse(0, 0, this.gridSize/2 - 1, this.gridSize/2 - 3, 0, 0, 2 * Math.PI);
+        this.ctx.fill();
+        
+        // 蛇头前部更尖
+        this.ctx.beginPath();
+        this.ctx.moveTo(this.gridSize/2 - 3, 0);
+        this.ctx.lineTo(this.gridSize/2 + 2, -3);
+        this.ctx.lineTo(this.gridSize/2 + 2, 3);
+        this.ctx.closePath();
+        this.ctx.fill();
+        
+        // 高光效果
+        this.ctx.fillStyle = '#2ecc71';
+        this.ctx.shadowBlur = 0;
+        this.ctx.beginPath();
+        this.ctx.ellipse(-3, -3, this.gridSize/4, this.gridSize/5, 0, 0, 2 * Math.PI);
+        this.ctx.fill();
+        
+        // 眼睛 - 根据头部方向调整位置
+        const eyeY = -4;
+        const eyeSize = 2.5;
+        const eyeOffset = 3;
+        
+        // 左眼
+        this.ctx.fillStyle = '#fff';
+        this.ctx.beginPath();
+        this.ctx.arc(-eyeOffset, eyeY, eyeSize, 0, 2 * Math.PI);
+        this.ctx.fill();
+        
+        // 右眼
+        this.ctx.beginPath();
+        this.ctx.arc(eyeOffset, eyeY, eyeSize, 0, 2 * Math.PI);
+        this.ctx.fill();
+        
+        // 瞳孔
+        this.ctx.fillStyle = '#000';
+        this.ctx.beginPath();
+        this.ctx.arc(-eyeOffset + 0.5, eyeY - 0.5, 1, 0, 2 * Math.PI);
+        this.ctx.fill();
+        
+        this.ctx.beginPath();
+        this.ctx.arc(eyeOffset + 0.5, eyeY - 0.5, 1, 0, 2 * Math.PI);
+        this.ctx.fill();
+        
+        // 蛇信子 - 分叉的舌头
+        this.ctx.strokeStyle = '#ff4757';
+        this.ctx.lineWidth = 1.5;
+        this.ctx.beginPath();
+        this.ctx.moveTo(this.gridSize/2 - 2, 0);
+        this.ctx.lineTo(this.gridSize/2 + 3, -2);
+        this.ctx.moveTo(this.gridSize/2 - 2, 0);
+        this.ctx.lineTo(this.gridSize/2 + 3, 2);
+        this.ctx.stroke();
+        
+        this.ctx.restore();
+    }
+    
+    drawSnakeBody(x, y, index) {
+        const centerX = x + this.gridSize / 2;
+        const centerY = y + this.gridSize / 2;
+        const isTail = index === this.snake.length - 1;
+        
+        this.ctx.save();
+        
+        // 创建身体段的渐变效果
+        const gradient = this.ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, this.gridSize/2 - 2);
+        
+        if (isTail) {
+            // 尾巴 - 逐渐变细
+            gradient.addColorStop(0, '#2ecc71');
+            gradient.addColorStop(1, '#27ae60');
+            
+            this.ctx.fillStyle = gradient;
+            this.ctx.shadowColor = '#27ae60';
+            this.ctx.shadowBlur = 4;
+            
+            // 绘制椭圆形的尾巴
+            this.ctx.beginPath();
+            this.ctx.ellipse(centerX, centerY, this.gridSize/2 - 3, this.gridSize/2 - 5, 0, 0, 2 * Math.PI);
+            this.ctx.fill();
+            
+            // 尾巴尖
+            this.ctx.beginPath();
+            this.ctx.ellipse(centerX + 2, centerY, this.gridSize/4, this.gridSize/4, 0, 0, 2 * Math.PI);
+            this.ctx.fill();
+        } else {
+            // 身体 - 圆润的连接
+            gradient.addColorStop(0, '#2ecc71');
+            gradient.addColorStop(1, '#27ae60');
+            
+            this.ctx.fillStyle = gradient;
+            this.ctx.shadowColor = '#27ae60';
+            this.ctx.shadowBlur = 5;
+            
+            // 绘制圆润的身体段
+            this.ctx.beginPath();
+            this.ctx.arc(centerX, centerY, this.gridSize/2 - 3, 0, 2 * Math.PI);
+            this.ctx.fill();
+            
+            // 身体纹理线条
+            this.ctx.strokeStyle = '#27ae60';
+            this.ctx.lineWidth = 0.5;
+            this.ctx.beginPath();
+            this.ctx.arc(centerX, centerY, this.gridSize/2 - 5, 0, 2 * Math.PI);
+            this.ctx.stroke();
+        }
+        
+        this.ctx.restore();
     }
     
     drawFood() {
