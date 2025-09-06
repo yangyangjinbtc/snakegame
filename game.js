@@ -7,6 +7,13 @@ class SnakeGame {
         this.finalScoreElement = document.getElementById('final-score');
         this.gameOverElement = document.getElementById('game-over');
         
+        // 添加成语库
+        this.idioms = [
+            "功亏一篑", "功败垂成", "前功尽弃", "半途而废", "壮志未酬",
+            "功亏一篑", "一失足成千古恨", "失之交臂", "棋差一着", "满盘皆输",
+            "功败垂成", "前功尽弃", "半途而废", "壮志未酬", "功亏一篑"
+        ];
+        
         this.startBtn = document.getElementById('start-btn');
         this.pauseBtn = document.getElementById('pause-btn');
         this.resetBtn = document.getElementById('reset-btn');
@@ -144,10 +151,63 @@ class SnakeGame {
         );
     }
     
+    getRandomIdiom() {
+        return this.idioms[Math.floor(Math.random() * this.idioms.length)];
+    }
+    
     gameOver() {
         this.stop();
         this.showGameOver();
         this.saveHighScore();
+        this.showIdiom();
+    }
+    
+    showIdiom() {
+        const idiom = this.getRandomIdiom();
+        
+        // 创建成语显示元素
+        const idiomDiv = document.createElement('div');
+        idiomDiv.id = 'game-idiom';
+        idiomDiv.style.cssText = `
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 15px;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            animation: fadeInOut 3s ease-in-out;
+        `;
+        
+        idiomDiv.textContent = `成语：${idiom}`;
+        
+        // 添加动画样式
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeInOut {
+                0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+                50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+                100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        document.body.appendChild(idiomDiv);
+        
+        // 3秒后自动移除
+        setTimeout(() => {
+            if (idiomDiv.parentNode) {
+                idiomDiv.parentNode.removeChild(idiomDiv);
+            }
+            if (style.parentNode) {
+                style.parentNode.removeChild(style);
+            }
+        }, 3000);
     }
     
     draw() {
